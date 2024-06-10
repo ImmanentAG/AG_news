@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>NewsItems</title>
+</head>
+<body>
+  <div id="place"></div>
+  
+  <script>
+    // Place the JavaScript code here
+// On page load
+window.addEventListener('load', function() {
+  // Step 1: Call GET to http://localhost:8080/api/tutorials/newsitem and receive json of NewsItems
+  fetch('http://localhost:8080/api/tutorials/newsitem')
+    .then(response => response.json())
+    .then(newsItems => {
+      // Step 1.1: Check if the URL parameter ?sort=1 is present
+      const urlParams = new URLSearchParams(window.location.search);
+      const sortParam = urlParams.get('sort');
+      
+      // Step 1.2: Sort the newsItems based on createdAt in ascending or descending order
+      if (sortParam === '1' || sortParam === null) {
+        newsItems.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      } else if (sortParam === '0') {
+        newsItems.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      }
+      
+      // Step 2: Call GET to http://localhost:8080/api/tutorials/categorypair and receive json of CategoryPairs
+      fetch('http://localhost:8080/api/tutorials/categorypair')
+        .then(response => response.json())
+        .then(categoryPairs => {
+          // Step 3: Call GET to http://localhost:8080/api/tutorials/topic and receive json of Topics
+          fetch('http://localhost:8080/api/tutorials/topic')
+            .then(response => response.json())
+            .then(topics => {
+              // Step 4: Call GET to http://localhost:8080/api/tutorials/likesdislikes and receive json of LikesDislikes
+              fetch('http://localhost:8080/api/tutorials/likesdislikes')
+                .then(response => response.json())
+                .then(likesDislikes => {
+                  // Step 5: Call GET to http://localhost:8080/api/tutorials/usertopicscores and receive json of UserTopicScores
+                  fetch('http://localhost:8080/api/tutorials/usertopicscores')
+                    .then(response => response.json())
+                    .then(userTopicScores => {
+                      // Step 6: Sort the newsItems list based on the provided criteria
+                      newsItems.sort((a, b) => {
+                        // Step 6.1: If the URL parameter ?test=yes is present, sort by updatedAt (from latest to earliest)
+                        if (urlParams.get('test') === 'yes') {
+                          return new Date(b.updatedAt) - new Date(a.updatedAt);
+                        }
+                        
+                        // Step 6.2: Sort by special value (from highest to lowest):
+                        // (number of likesDislikes where likeDislike is 1 and newsItemID is current newsItemID)
+                        // + (PromotionalBoost of current Newsitem)
+                        // + (TopicRating from userTopicScore where topicID = current newsItem's topicID)
+                        const likesDislikesCount = likesDislikes.filter(item => item.likeDislike === 1 && item.newsItemID === a.ID).length;
+                        const promotionalBoost = a.PromotionalBoost;
+                        const topicRating = userTopicScores.find(item => item.topicID === a.topicID)?.TopicRating || 0;
+                        const valueA = likesDislikesCount + promotionalBoost + topicRating;
+                        const valueB = likesDislikes.filter(item => item.likeDislike === 1 && item.newsItemID === b.ID).length +
+                          b.PromotionalBoost + (userTopicScores.find(item => item.topicID === b.topicID)?.TopicRating || 0);
+                        return valueB - valueA;
+                      });
+                      
+                      // Step 7: Divide the sorted list of newsItems into lists based on Topics
+                      const categorizedNewsItems = {};
+                      const uncategorizedNewsItems = [];
+                      categoryPairs.forEach(categoryPair => {
+                        const topicID = categoryPair.topicID;
+                        const newsItemID = categoryPair.newsItemID;
+                        if (categorizedNewsItems[topicID]) {
+                          categorizedNewsItems[topicID].push(newsItems.find(item => item.ID === newsItemID));
+                        } else {
+                          categorizedNewsItems[topicID] = [newsItems.find(item => item.ID === newsItemID)];
+                        }
+                      });
+                      newsItems.forEach(newsItem => {
+                        if (!categoryPairs.find(categoryPair => categoryPair.newsItemID === newsItem.ID)) {
+                          uncategorizedNewsItems.push(newsItem);
+                        }
+                      });
+                      
+                      // Step 8: Find the div with id "place" and insert the lists inside it
+                      const placeDiv = document.getElementById('place');
+                      Object.entries(categorizedNewsItems).forEach(([topicID, newsItems]) => {
+                        const topic = topics.find(topic => topic.ID === parseInt(topicID));
+                        const topicName = topic ? topic.Name : 'Uncategorized';
+                        const sublist = newsItems.map(newsItem => `<li>${newsItem.Heading}</li>`).join('');
+                        placeDiv.innerHTML += `<h3>${topicName}</h3><ul>${sublist}</ul>`;
+                      });
+                      const uncategorizedSublist = uncategorizedNewsItems.map(newsItem => `<li>${newsItem.Heading}</li>`).join('');
+                      placeDiv.innerHTML += `<h3>Uncategorized</h3><ul>${uncategorizedSublist}</ul>`;
+                    });
+                });
+            });
+        });
+    })
+    .catch(error => {
+      alert(error);
+    });
+});
+
+  </script>
+</body>
+</html>
